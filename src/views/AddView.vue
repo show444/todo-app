@@ -34,9 +34,9 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from "@vue/composition-api";
-import { useRouter } from "@/router/use-router";
 import { Todo } from "@/interface/todo";
+import { useRouter } from "@/router/use-router";
+import { defineComponent, ref } from "@vue/composition-api";
 
 export default defineComponent({
   setup() {
@@ -51,22 +51,33 @@ export default defineComponent({
      * 新規登録
      */
     const addTodo = () => {
+      //ブラウザのストレージに保存してあるキーが"todoList"のデータを取得し、
+      //nullの時は空を渡し、データがある場合は配列としてデータをlet todoに渡すという処理を行っている
       let dataList: Todo[] = JSON.parse(
         window.localStorage.getItem("todoList") ?? ""
       );
+      /* 
+      ・dataList.lengthでnullでなければdataList.reduce()の処理、nullなら１を返却
+      ・dataList.reduce()では、dataListの要素をa,bとして２要素の大小を比べ大きいほうを次の要素と比べ、
+        最終的に一番大きい数字のid+1の数値を取得する役割を果たしている 
+       */
       const id: number = dataList.length
         ? dataList.reduce((a: Todo, b: Todo) => (a.id > b.id ? a : b)).id + 1
         : 1;
       const dataset: Todo = {
         id: id,
         status: 0,
-        title: "title",
-        description: "description",
-        startDate: "2022/12/12",
-        endDate: "2022/12/30",
+        title: title.value,
+        description: description.value,
+        startDate: startDate.value,
+        endDate: endDate.value,
       };
+      // データに要素追加
       dataList.push(dataset);
+      // JSON.stringify()→dataListをJSON形式の文字列に変換
+      // キー："todoList"でブラウザのストレージに保存
       window.localStorage.setItem("todoList", JSON.stringify(dataList));
+      // 画面遷移
       router.push("/");
     };
 

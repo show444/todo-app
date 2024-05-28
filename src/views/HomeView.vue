@@ -4,7 +4,10 @@
       <p class="top-title">TOP (予定一覧表示)</p>
     </div>
     <div class="main-area">
-      <filter-list :filterStatus="filterStatus"></filter-list>
+      <filter-list
+        :filterStatus="filterStatus"
+        @changeFilter="changeFilter"
+      ></filter-list>
       <div class="flex justify-center">
         <ul class="todo-list">
           <li class="flex justify-end">
@@ -14,7 +17,7 @@
           </li>
           <li v-if="!todoList.length">登録されている予定はありません。</li>
           <li v-for="todo in todoList" :key="todo.id">
-            <todo-list :todo="todo"></todo-list>
+            <todo-list :todo="todo" @updateStatus="updateStatus"></todo-list>
           </li>
         </ul>
       </div>
@@ -24,8 +27,8 @@
 <script lang="ts">
 import FilterList from "@/components/FilterList.vue";
 import TodoList from "@/components/TodoList.vue";
-import { defineComponent, ref } from "@vue/composition-api";
 import { Todo } from "@/interface/todo";
+import { defineComponent, ref } from "@vue/composition-api";
 
 export default defineComponent({
   components: { TodoList, FilterList },
@@ -56,16 +59,45 @@ export default defineComponent({
      * @param {number} id
      * @param {number} status
      */
+    const updateStatus = (id: number, status: number) => {
+      let todo: Todo | undefined = dataList.find((todo) => todo.id === id);
+      if (todo !== undefined && status < 2) {
+        todo.status = status + 1;
+        const index = dataList.findIndex((todo) => todo.id === id);
+        dataList[index] = todo;
+        window.localStorage.setItem("todoList", JSON.stringify(dataList));
+        changeFilter(filterStatus.value);
+      }
+    };
 
     /**
      * フィルターの更新処理
      *
      * @param {string} status
      */
+    const changeFilter = (status: string) => {
+      filterStatus.value = status;
+      todoList.value = dataList;
+      todoList.value.sort(function (a, b) {
+        if (a.status > b.status) return 1;
+        if (a.status < b.status) return -1;
+
+        if (a.endDate > b.endDate) return 1;
+        if (a.endDate < b.endDate) return -1;
+        return 0;
+      });
+      if (Number(status) !== 3) {
+        todoList.value = todoList.value.filter(
+          (todo) => todo.status === Number(status)
+        );
+      }
+    };
 
     return {
       filterStatus,
       todoList,
+      updateStatus,
+      changeFilter,
     };
   },
 });
